@@ -1,6 +1,5 @@
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct MusicHomeView: View {
     @StateObject private var library = MediaLibrary()
@@ -173,24 +172,18 @@ struct MusicHomeView: View {
             }
             .navigationTitle("Music")
             .navigationBarTitleDisplayMode(.inline)
-            .fileImporter(
-                isPresented: $showingImporter,
-                allowedContentTypes: [.item],
-                allowsMultipleSelection: true
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    guard !urls.isEmpty else {
-                        importError = "没有选择文件"
-                        return
+            .sheet(isPresented: $showingImporter) {
+                DocumentPicker(
+                    onPick: { urls in
+                        showingImporter = false
+                        library.importFiles(urls)
+                        importError = nil
+                    },
+                    onCancel: {
+                        showingImporter = false
                     }
-
-                    library.importFiles(urls)
-                    importError = nil
-
-                case .failure(let error):
-                    importError = "文件选择失败：\(error.localizedDescription)"
-                }
+                )
+                .ignoresSafeArea()
             }
             .onAppear {
                 library.refresh()
