@@ -1,50 +1,46 @@
-# EmotionWatch Offline Watch Media
+# EmotionMusic 双端离线播放器源码
 
-这是一个适合 Apple Watch 的离线媒体播放器雏形，支持：
+本源码包用于把现有 SwiftUI 播放器整理为 iPhone + Apple Watch 两个独立 App。
 
-- 本地音频播放：MP3、M4A
-- 本地视频播放：MP4、MOV
-- 离线播放：从 Watch 本地文件或 App Bundle 中读取媒体
-- 简单的播放列表和控制界面
+## 重要说明
+- 本包提供统一的数据模型、媒体库、音频播放、LRC 解析、WatchConnectivity 传输，以及两端基础界面。
+- 它不是已经签名的 IPA，也不是可直接归档的完整 `.xcodeproj`。需要在 Xcode 中创建 iOS App Target 和 watchOS App Target，并按下方说明加入文件。
+- `WatchVideoView` 当前明确显示兼容性提示。Apple Watch 的视频播放能力与 watchOS 版本、设备和媒体格式有关，不承诺所有视频均可播放。
+- 不要把两个 `@main` 文件同时加入同一个 Target。
 
-这个仓库目前是一个可扩展的 watchOS 代码骨架，方便你在 Xcode 中继续开发成完整产品。
+## Target 文件归属
 
-## 目录结构
+### Shared（两个 Target 都加入）
+- `Shared/MediaItem.swift`
+- `Shared/MusicTheme.swift`
+- `Shared/MediaLibrary.swift`
+- `Shared/OfflinePlayer.swift`
+- `Shared/LyricsManager.swift`
+- `Shared/WatchTransferManager.swift`
 
-- `Sources/EmotionWatchWatchApp/EmotionWatchWatchApp.swift`：App 入口
-- `Sources/EmotionWatchWatchApp/MediaLibrary.swift`：本地媒体扫描和数据模型
-- `Sources/EmotionWatchWatchApp/OfflineMediaPlayer.swift`：播放控制
-- `Sources/EmotionWatchWatchApp/ContentView.swift`：UI 页面
+### iOS App Target
+- `iOS/EmotionMusicApp.swift`
+- `iOS/MusicHomeView.swift`
+- `iOS/LocalVideoPlayerView.swift`
 
-## 适合的开发方式
+### watchOS App Target
+- `Watch/EmotionMusicWatchApp.swift`
+- `Watch/WatchHomeView.swift`
 
-1. 在 Xcode 中创建一个 watchOS App
-2. 让 `Sources/EmotionWatchWatchApp` 下的 Swift 文件加入目标
-3. 在 Watch App 中使用 `Documents` 目录同步离线文件
-4. 将 MP3、MP4 等媒体文件复制到 App 的 `Documents` 路径
+## Xcode 配置
+1. 创建 iOS App，Interface 选 SwiftUI，Language 选 Swift。
+2. 在同一工程添加 watchOS App Target（独立 Watch App）。
+3. 将 Shared 文件同时勾选两个 Target Membership。
+4. 将 `iOS` 文件只勾选 iOS Target；将 `Watch` 文件只勾选 Watch Target。
+5. 两个 Target 的 Bundle Identifier 必须不同；设置各自 Signing Team。
+6. iOS Deployment Target 建议 iOS 17 或更高；watchOS Deployment Target 建议 watchOS 10 或更高。
+7. iOS App 的主入口为 `EmotionMusicApp.swift`；Watch App 的主入口为 `EmotionMusicWatchApp.swift`。
+8. 如需从 iPhone 传文件到 Watch，两个 App 都要启用 WatchConnectivity 能力（并在真实设备上测试）。
 
-## 典型本地文件目录
+## 使用
+- iPhone：点“导入媒体”，选择 MP3/M4A/MP4/MOV。文件复制到 App Documents 后会出现在媒体库。
+- Watch：先在 iPhone 端选择歌曲并点“发送到 Apple Watch”；Watch 收到后复制到自己的 Documents，之后可独立播放。
+- LRC：把与歌曲同名的 `.lrc` 文件放在同一目录；导入时会一起复制。当前歌词显示按播放时间同步。
 
-例如：
-
-```
-/var/mobile/Containers/Data/Application/.../Documents/
-```
-
-你可以在 WatchKit 扩展或 iPhone App 中将文件同步到这里，再让 watchOS 读取。
-
-## 关键设计点
-
-- `OfflineMediaLibrary` 会扫描本地文件，并自动识别 `.mp3`, `.m4a`, `.mp4`, `.mov`
-- `OfflineMediaPlayer` 使用 `AVPlayer` 统一处理音频和视频
-- `ContentView` 提供播放列表和单个媒体播放界面
-
-## 下一步建议
-
-- 增加“下载管理”功能，允许从 iPhone 侧同步到 Watch
-- 支持字幕、播放列表保存、进度记忆
-- 增加更适合 watchOS 的交互设计，例如数字表盘快捷播放
-
-## 说明
-
-这份代码是一个起步版本，适合在真实项目中继续扩展。你也可以将它直接做成一个更完整的 watchOS 问题/治疗类健康 App 的离线播放模块。
+## GitHub Actions
+请在仓库中加入 `.github/workflows/ios-build.yml`。工作流会构建 iOS Simulator 版本用于检查编译。要导出可安装 IPA，需要配置 Apple Distribution 证书、Provisioning Profile、Team ID 和签名流程；不要把证书密码写进源码。
