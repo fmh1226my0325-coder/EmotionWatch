@@ -8,7 +8,6 @@ struct MusicHomeView: View {
 
     @State private var showingImporter = false
     @State private var importError: String?
-    @State private var showingImportMessage = false
 
     var body: some View {
         NavigationStack {
@@ -176,22 +175,21 @@ struct MusicHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .fileImporter(
                 isPresented: $showingImporter,
-                allowedContentTypes: [
-                    .audio,
-                    .movie,
-                    .mpeg4Movie,
-                    .quickTimeMovie,
-                    UTType(filenameExtension: "lrc") ?? .plainText
-                ],
+                allowedContentTypes: [.item],
                 allowsMultipleSelection: true
             ) { result in
                 switch result {
                 case .success(let urls):
+                    guard !urls.isEmpty else {
+                        importError = "没有选择文件"
+                        return
+                    }
+
                     library.importFiles(urls)
                     importError = nil
 
                 case .failure(let error):
-                    importError = "导入失败：\(error.localizedDescription)"
+                    importError = "文件选择失败：\(error.localizedDescription)"
                 }
             }
             .onAppear {
@@ -389,7 +387,6 @@ struct MediaListView: View {
 
 struct PlaybackView: View {
     @ObservedObject var player: OfflinePlayer
-
     @State private var lyrics: [LyricLine] = []
 
     var body: some View {
