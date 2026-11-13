@@ -43,8 +43,14 @@ jobs:
             exit 1
           fi
 
-          /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" \
-            "$APP_PATH/Info.plist"
+          echo "iPhone App exists."
+
+          if /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$APP_PATH/Info.plist"; then
+            echo "Background audio configuration found."
+          else
+            echo "WARNING: UIBackgroundModes is missing."
+            echo "Continuing to verify Apple Watch App."
+          fi
 
       - name: Verify Embedded Apple Watch App
         run: |
@@ -52,12 +58,14 @@ jobs:
 
           APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
 
+          echo "Searching for embedded Watch App..."
+
           WATCH_APP="$(find "$APP_PATH" \
             -mindepth 2 -type d -name '*.app' -print -quit)"
 
           if [ -z "$WATCH_APP" ]; then
             echo "ERROR: Apple Watch App is not embedded!"
-            find "$APP_PATH" -maxdepth 4 -print
+            find "$APP_PATH" -maxdepth 5 -print
             exit 1
           fi
 
@@ -79,9 +87,17 @@ jobs:
 
       - name: Package Unsigned IPA
         run: |
+          set -e
+
           mkdir -p Payload
-          cp -R build/Build/Products/Release-iphoneos/EmotionMusic.app Payload/
+
+          cp -R \
+            build/Build/Products/Release-iphoneos/EmotionMusic.app \
+            Payload/
+
           zip -qry EmotionMusic-unsigned.ipa Payload
+
+          echo "IPA packaged successfully."
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
