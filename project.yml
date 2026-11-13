@@ -1,6 +1,11 @@
-
 name: EmotionMusic
 
+options:
+  postGenCommand: |
+    sed -i '' \
+      -e 's|dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";|dstPath = "";|' \
+      -e 's|dstSubfolderSpec = 16;|dstSubfolderSpec = 13;|' \
+      EmotionMusic.xcodeproj/project.pbxproj
 options:
   bundleIdPrefix: com.emotionmusic
 
