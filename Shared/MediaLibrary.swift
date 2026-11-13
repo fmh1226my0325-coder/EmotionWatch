@@ -1,7 +1,6 @@
 
 import Foundation
 import SwiftUI
-import UniformTypeIdentifiers
 
 @MainActor
 final class MediaLibrary: ObservableObject {
@@ -77,14 +76,6 @@ final class MediaLibrary: ObservableObject {
         var failures: [String] = []
 
         for source in urls {
-            let accessed = source.startAccessingSecurityScopedResource()
-
-            defer {
-                if accessed {
-                    source.stopAccessingSecurityScopedResource()
-                }
-            }
-
             let ext = source.pathExtension.lowercased()
 
             guard supportedAudio.contains(ext)
@@ -94,15 +85,35 @@ final class MediaLibrary: ObservableObject {
                 continue
             }
 
+            let accessed = source.startAccessingSecurityScopedResource()
+
+            defer {
+                if accessed {
+                    source.stopAccessingSecurityScopedResource()
+                }
+            }
+
             let destination = uniqueDestination(
                 for: source.lastPathComponent
             )
 
             do {
-                try FileManager.default.copyItem(
-                    at: source,
-                    to: destination
-                )
+                let fileManager = FileManager.default
+
+                if accessed {
+                    try fileManager.copyItem(
+                        at: source,
+                        to: destination
+                    )
+                } else {
+                    // 某些系统提供的 URL 不需要安全作用域访问。
+                    // 仍然尝试复制，让系统返回具体错误。
+                    try fileManager.copyItem(
+                        at: source,
+                        to: destination
+                    )
+                }
+
                 successCount += 1
             } catch {
                 failures.append(
@@ -115,6 +126,7 @@ final class MediaLibrary: ObservableObject {
 
         if failures.isEmpty {
             importMessage = "成功导入 \(successCount) 个文件"
+            errorMessage = nil
         } else {
             importMessage = "成功导入 \(successCount) 个文件；失败 \(failures.count) 个"
             errorMessage = failures.joined(separator: "\n")
