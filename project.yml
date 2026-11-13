@@ -10,7 +10,6 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    GENERATE_INFOPLIST_FILE: YES
 
 targets:
   EmotionMusic:
@@ -20,7 +19,9 @@ targets:
       - path: Shared
       - path: iOS
     info:
+      path: EmotionMusic-Info.plist
       properties:
+        CFBundleDisplayName: EmotionMusic
         UIBackgroundModes:
           - audio
     settings:
@@ -28,7 +29,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.ios
         PRODUCT_NAME: EmotionMusic
         TARGETED_DEVICE_FAMILY: "1"
-        INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         SUPPORTS_MACCATALYST: NO
 
