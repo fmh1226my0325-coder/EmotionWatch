@@ -34,7 +34,10 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee iphone-build.log
 
-      - name: Package Unsigned IPA
+      - name: Verify Background Audio
+        run: |
+          /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" \
+            build/Build/Products/Release-iphoneos/EmotionMusic.app/Info.plist
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/EmotionMusic.app Payload/
