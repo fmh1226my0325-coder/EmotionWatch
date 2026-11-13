@@ -28,7 +28,6 @@ jobs:
             -project EmotionMusic.xcodeproj \
             -scheme EmotionMusic \
             -configuration Release \
-            -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
@@ -37,6 +36,7 @@ jobs:
       - name: Verify iPhone App
         run: |
           set -e
+
           APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
 
           if [ ! -d "$APP_PATH" ]; then
@@ -57,11 +57,12 @@ jobs:
           set -e
 
           APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
-          WATCH_APP="$APP_PATH/PlugIns/EmotionMusicWatch.app"
+          WATCH_APP="$APP_PATH/Watch/EmotionMusicWatch.app"
 
           if [ ! -d "$WATCH_APP" ]; then
             echo "ERROR: Watch App not found at expected path"
-            find "$APP_PATH" -maxdepth 5 -print
+            echo "Searching for Watch app..."
+            find "$APP_PATH" -maxdepth 5 -name "*.app" -print
             exit 1
           fi
 
@@ -82,7 +83,7 @@ jobs:
         run: |
           set -e
 
-          WATCH_APP="build/Build/Products/Release-iphoneos/EmotionMusic.app/PlugIns/EmotionMusicWatch.app"
+          WATCH_APP="build/Build/Products/Release-iphoneos/EmotionMusic.app/Watch/EmotionMusicWatch.app"
 
           echo "===== WATCH INFO.PLIST ====="
           /usr/libexec/PlistBuddy -c "Print" "$WATCH_APP/Info.plist"
@@ -91,6 +92,9 @@ jobs:
           EXECUTABLE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$WATCH_APP/Info.plist")
           echo "Executable: $EXECUTABLE"
           file "$WATCH_APP/$EXECUTABLE"
+
+          echo "===== WATCH BUILD PLATFORM ====="
+          xcrun vtool -show-build "$WATCH_APP/$EXECUTABLE"
 
           echo "===== WATCH APP CONTENTS ====="
           find "$WATCH_APP" -maxdepth 3 -print
