@@ -1,0 +1,34 @@
+
+name: Unpack EmotionMusic Source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unpack source ZIP
+        run: |
+          mkdir extracted
+          unzip -o EmotionMusic_Source.zip -d extracted
+          cp -R extracted/Shared .
+          cp -R extracted/iOS .
+          cp -R extracted/Watch .
+          cp extracted/README.md .
+          mkdir -p .github/workflows
+          cp -R extracted/.github/workflows/. .github/workflows/
+
+      - name: Commit source files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Shared iOS Watch README.md .github/workflows
+          git commit -m "Add EmotionMusic source files" || echo "No changes"
+          git push
