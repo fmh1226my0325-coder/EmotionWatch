@@ -19,7 +19,10 @@ targets:
     sources:
       - path: Shared
       - path: iOS
-
+    info:
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.ios
@@ -27,7 +30,6 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UIBackgroundModes: audio
         SUPPORTS_MACCATALYST: NO
 
   EmotionMusicWatch:
@@ -36,7 +38,6 @@ targets:
     sources:
       - path: Shared
       - path: Watch
-
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.watch
