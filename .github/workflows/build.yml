@@ -1,0 +1,55 @@
+
+name: Build EmotionMusic iPhone IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Build iPhone Device App
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project EmotionMusic.xcodeproj \
+            -scheme EmotionMusic \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee iphone-build.log
+
+      - name: Package Unsigned IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/EmotionMusic.app Payload/
+          zip -r EmotionMusic-unsigned.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: EmotionMusic-iPhone-Unsigned-IPA
+          path: EmotionMusic-unsigned.ipa
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EmotionMusic-Build-Log
+          path: iphone-build.log
+          if-no-files-found: ignore
