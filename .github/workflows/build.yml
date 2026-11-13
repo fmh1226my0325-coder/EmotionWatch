@@ -1,5 +1,5 @@
 
-name: Build EmotionMusic iPhone IPA
+name: Build EmotionMusic iPhone + Apple Watch
 
 on:
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
-      - name: Build iPhone Device App
+      - name: Build iPhone App with Embedded Watch App
         run: |
           set -o pipefail
           xcodebuild \
@@ -34,21 +34,59 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee iphone-build.log
 
-      - name: Verify Background Audio
+      - name: Verify iPhone App
         run: |
+          APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: iPhone App not found"
+            exit 1
+          fi
+
           /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" \
-            build/Build/Products/Release-iphoneos/EmotionMusic.app/Info.plist
+            "$APP_PATH/Info.plist"
+
+      - name: Verify Embedded Apple Watch App
+        run: |
+          set -e
+
+          APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
+
+          WATCH_APP="$(find "$APP_PATH" \
+            -mindepth 2 -type d -name '*.app' -print -quit)"
+
+          if [ -z "$WATCH_APP" ]; then
+            echo "ERROR: Apple Watch App is not embedded!"
+            find "$APP_PATH" -maxdepth 4 -print
+            exit 1
+          fi
+
+          echo "Found Watch App: $WATCH_APP"
+
+          WATCH_ID=$(/usr/libexec/PlistBuddy \
+            -c "Print :CFBundleIdentifier" "$WATCH_APP/Info.plist")
+
+          COMPANION_ID=$(/usr/libexec/PlistBuddy \
+            -c "Print :WKCompanionAppBundleIdentifier" "$WATCH_APP/Info.plist")
+
+          echo "Watch Bundle ID: $WATCH_ID"
+          echo "Companion Bundle ID: $COMPANION_ID"
+
+          test "$WATCH_ID" = "com.emotionmusic.ios.watchkitapp"
+          test "$COMPANION_ID" = "com.emotionmusic.ios"
+
+          echo "SUCCESS: Watch App is embedded and identifiers match."
 
       - name: Package Unsigned IPA
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/EmotionMusic.app Payload/
-          zip -r EmotionMusic-unsigned.ipa Payload
+          zip -qry EmotionMusic-unsigned.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: EmotionMusic-iPhone-Unsigned-IPA
+          name: EmotionMusic-iPhone-Watch-Unsigned-IPA
           path: EmotionMusic-unsigned.ipa
 
       - name: Upload Build Log
