@@ -17,8 +17,8 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: Shared
-      - path: iOS
+      - Shared
+      - iOS
     info:
       properties:
         UIBackgroundModes:
@@ -36,8 +36,8 @@ targets:
     type: application
     platform: watchOS
     sources:
-      - path: Shared
-      - path: Watch
+      - Shared
+      - Watch
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.watch
