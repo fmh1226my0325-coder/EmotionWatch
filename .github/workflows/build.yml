@@ -36,7 +36,6 @@ jobs:
       - name: Verify iPhone App
         run: |
           set -e
-
           APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
 
           if [ ! -d "$APP_PATH" ]; then
@@ -74,8 +73,8 @@ jobs:
           echo "Watch Bundle ID: $WATCH_ID"
           echo "Companion Bundle ID: $COMPANION_ID"
 
-          test "$WATCH_ID" = "com.emotionmusic.ios.watchkitapp"
-          test "$COMPANION_ID" = "com.emotionmusic.ios"
+          test "$WATCH_ID" = "com.jionzyk.emotionmusic.watchkitapp"
+          test "$COMPANION_ID" = "com.jionzyk.emotionmusic"
 
           echo "SUCCESS: Watch App is embedded and identifiers match."
 
@@ -91,6 +90,7 @@ jobs:
           echo "===== WATCH EXECUTABLE ====="
           EXECUTABLE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$WATCH_APP/Info.plist")
           echo "Executable: $EXECUTABLE"
+
           file "$WATCH_APP/$EXECUTABLE"
 
           echo "===== WATCH BUILD PLATFORM ====="
