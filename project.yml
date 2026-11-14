@@ -7,10 +7,7 @@ options:
 deploymentTarget:
   iOS: "17.0"
   watchOS: "10.0"
-    info:
-      properties:
-        UIBackgroundModes:
-          - audio
+
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -26,12 +23,17 @@ targets:
     dependencies:
       - target: EmotionMusicWatch
         embed: true
+    info:
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.ios
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+
   EmotionMusicWatch:
     type: application
     platform: watchOS
