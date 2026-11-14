@@ -2,7 +2,7 @@
 name: EmotionMusic
 
 options:
-  bundleIdPrefix: com.jionzyk.emotionmusic.6C26JP6Z6T
+  bundleIdPrefix: com.jionzyk
 
 deploymentTarget:
   iOS: "17.0"
@@ -30,7 +30,7 @@ targets:
           - audio
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jionzyk.emotionmusic.6C26JP6Z6T
+        PRODUCT_BUNDLE_IDENTIFIER: com.jionzyk.emotionmusic
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
