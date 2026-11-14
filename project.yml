@@ -48,5 +48,5 @@ targets:
         SKIP_INSTALL: YES
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_WKWatchKitApp: YES
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.jionzyk.emotionmusic
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.jionzyk.emotionmusic.6C26JP6Z6T
         INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: YES
