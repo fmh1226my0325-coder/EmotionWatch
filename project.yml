@@ -2,7 +2,7 @@
 name: EmotionMusic
 
 options:
-bundleIdPrefix: com.jionzyk
+  bundleIdPrefix: com.jionzyk
 
 deploymentTarget:
   iOS: "17.0"
@@ -30,7 +30,7 @@ targets:
           - audio
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.ios
+        PRODUCT_BUNDLE_IDENTIFIER: com.jionzyk.emotionmusic
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
@@ -43,10 +43,10 @@ targets:
       - path: Watch
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.ios.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: com.jionzyk.emotionmusic.watchkitapp
         TARGETED_DEVICE_FAMILY: "4"
         SKIP_INSTALL: YES
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
         INFOPLIST_KEY_WKWatchKitApp: YES
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.emotionmusic.ios
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.jionzyk.emotionmusic
         INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: YES
