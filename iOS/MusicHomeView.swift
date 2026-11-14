@@ -1,5 +1,6 @@
 
 import SwiftUI
+import UIKit
 
 struct MusicHomeView: View {
     @StateObject private var library = MediaLibrary()
@@ -28,23 +29,10 @@ struct MusicHomeView: View {
                                             )
                                         } label: {
                                             VStack(alignment: .leading, spacing: 7) {
-                                                ZStack {
-                                                    RoundedRectangle(cornerRadius: 14)
-                                                        .fill(
-                                                            LinearGradient(
-                                                                colors: [
-                                                                    MusicTheme.softRed,
-                                                                    MusicTheme.accent
-                                                                ],
-                                                                startPoint: .topLeading,
-                                                                endPoint: .bottomTrailing
-                                                            )
-                                                        )
-
-                                                    Image(systemName: "music.note")
-                                                        .font(.largeTitle)
-                                                        .foregroundStyle(.white)
-                                                }
+                                                ArtworkCover(
+                                                    artworkFileName: item.artworkFileName,
+                                                    fallbackIcon: "music.note"
+                                                )
                                                 .frame(width: 112, height: 112)
 
                                                 Text(item.title)
@@ -55,6 +43,7 @@ struct MusicHomeView: View {
                                                 Text(item.artist)
                                                     .font(.caption2)
                                                     .foregroundStyle(MusicTheme.secondary)
+                                                    .lineLimit(1)
                                             }
                                         }
                                         .buttonStyle(.plain)
@@ -322,6 +311,58 @@ struct MusicHomeView: View {
     }
 }
 
+// MARK: - 本地封面图片
+
+struct ArtworkCover: View {
+    let artworkFileName: String?
+    var fallbackIcon: String = "music.note"
+
+    private var artworkImage: UIImage? {
+        guard let artworkFileName else {
+            return nil
+        }
+
+        let documents = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0]
+
+        let artworkURL = documents
+            .appendingPathComponent("Artwork", isDirectory: true)
+            .appendingPathComponent(artworkFileName)
+
+        return UIImage(contentsOfFile: artworkURL.path)
+    }
+
+    var body: some View {
+        ZStack {
+            if let artworkImage {
+                Image(uiImage: artworkImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                LinearGradient(
+                    colors: [
+                        MusicTheme.softRed,
+                        MusicTheme.accent
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                Image(systemName: fallbackIcon)
+                    .font(.largeTitle)
+                    .foregroundStyle(.white)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+// MARK: - 媒体列表
+
 struct MediaListView: View {
     let title: String
     let items: [MediaItem]
@@ -348,17 +389,13 @@ struct MediaListView: View {
                 }
             } label: {
                 HStack(spacing: 12) {
-                    Image(
-                        systemName: item.kind == .audio
+                    ArtworkCover(
+                        artworkFileName: item.artworkFileName,
+                        fallbackIcon: item.kind == .audio
                             ? "music.note"
                             : "play.rectangle.fill"
                     )
-                    .foregroundStyle(MusicTheme.accent)
-                    .frame(width: 38, height: 38)
-                    .background(
-                        MusicTheme.card,
-                        in: RoundedRectangle(cornerRadius: 10)
-                    )
+                    .frame(width: 42, height: 42)
 
                     VStack(alignment: .leading) {
                         Text(item.title)
@@ -382,6 +419,8 @@ struct MediaListView: View {
     }
 }
 
+// MARK: - 播放页面
+
 struct PlaybackView: View {
     @ObservedObject var player: OfflinePlayer
     @State private var lyrics: [LyricLine] = []
@@ -390,24 +429,12 @@ struct PlaybackView: View {
         VStack(spacing: 20) {
             Spacer()
 
-            RoundedRectangle(cornerRadius: 24)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            MusicTheme.softRed,
-                            MusicTheme.accent
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 75))
-                        .foregroundStyle(.white)
-                }
-                .aspectRatio(1, contentMode: .fit)
-                .padding(.horizontal, 30)
+            ArtworkCover(
+                artworkFileName: player.currentItem?.artworkFileName,
+                fallbackIcon: "music.note"
+            )
+            .aspectRatio(1, contentMode: .fit)
+            .padding(.horizontal, 30)
 
             Text(player.currentItem?.title ?? "暂无播放内容")
                 .font(.title3.bold())
