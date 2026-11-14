@@ -24,6 +24,7 @@ targets:
       - target: EmotionMusicWatch
         embed: true
     info:
+      path: EmotionMusic-Info.plist
       properties:
         UIBackgroundModes:
           - audio
