@@ -4,6 +4,10 @@ import AVFoundation
 import MediaPlayer
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#endif
+
 @MainActor
 final class OfflinePlayer: ObservableObject {
 
@@ -14,7 +18,6 @@ final class OfflinePlayer: ObservableObject {
     }
 
     let player = AVPlayer()
-
     @Published private(set) var queue: [MediaItem] = []
     @Published private(set) var currentItem: MediaItem?
     @Published private(set) var isPlaying = false
@@ -28,6 +31,11 @@ final class OfflinePlayer: ObservableObject {
     private var statusObserver: NSKeyValueObservation?
     private var remoteTargets: [(MPRemoteCommand, Any)] = []
 
+    #if os(iOS)
+    private var cachedArtworkFileName: String?
+    private var cachedArtwork: MPMediaItemArtwork?
+    #endif
+
     init() {
         configureAudioSession()
         configureRemoteCommands()
@@ -38,7 +46,6 @@ final class OfflinePlayer: ObservableObject {
         if let timeObserver {
             player.removeTimeObserver(timeObserver)
         }
-
         if let endObserver {
             NotificationCenter.default.removeObserver(endObserver)
         }
@@ -286,6 +293,7 @@ final class OfflinePlayer: ObservableObject {
             let previousIndex = index - 1
 
             let target: MediaItem?
+
             if previousIndex >= 0 {
                 target = queue[previousIndex]
             } else {
@@ -312,6 +320,8 @@ final class OfflinePlayer: ObservableObject {
         }
     }
 
+    // MARK: - 锁屏播放信息
+
     private func updateNowPlayingInfo() {
         guard let item = currentItem else {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
@@ -329,8 +339,54 @@ final class OfflinePlayer: ObservableObject {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
 
+        #if os(iOS)
+        if let artwork = loadLockScreenArtwork(for: item) {
+            info[MPMediaItemPropertyArtwork] = artwork
+        }
+        #endif
+
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
+
+    #if os(iOS)
+    // MARK: - 读取锁屏封面
+
+    private func loadLockScreenArtwork(
+        for item: MediaItem
+    ) -> MPMediaItemArtwork? {
+        guard let fileName = item.artworkFileName,
+              !fileName.isEmpty else {
+            cachedArtworkFileName = nil
+            cachedArtwork = nil
+            return nil
+        }
+
+        if cachedArtworkFileName == fileName {
+            return cachedArtwork
+        }
+
+        let artworkURL = documentsURL
+            .appendingPathComponent("Artwork", isDirectory: true)
+            .appendingPathComponent(fileName)
+
+        guard let image = UIImage(contentsOfFile: artworkURL.path) else {
+            cachedArtworkFileName = fileName
+            cachedArtwork = nil
+            return nil
+        }
+
+        let artwork = MPMediaItemArtwork(
+            boundsSize: image.size
+        ) { _ in
+            image
+        }
+
+        cachedArtworkFileName = fileName
+        cachedArtwork = artwork
+
+        return artwork
+    }
+    #endif
 
     private var documentsURL: URL {
         FileManager.default.urls(
