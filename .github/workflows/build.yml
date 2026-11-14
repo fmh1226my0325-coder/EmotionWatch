@@ -36,6 +36,7 @@ jobs:
       - name: Verify iPhone App
         run: |
           set -e
+
           APP_PATH="build/Build/Products/Release-iphoneos/EmotionMusic.app"
 
           if [ ! -d "$APP_PATH" ]; then
@@ -44,6 +45,12 @@ jobs:
           fi
 
           echo "iPhone App exists."
+
+          IPHONE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Info.plist")
+
+          echo "iPhone Bundle ID: $IPHONE_ID"
+
+          test "$IPHONE_ID" = "com.jionzyk.emotionmusic.6C26JP6Z6T"
 
           if /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$APP_PATH/Info.plist"; then
             echo "Background audio configuration found."
@@ -73,7 +80,7 @@ jobs:
           echo "Watch Bundle ID: $WATCH_ID"
           echo "Companion Bundle ID: $COMPANION_ID"
 
-          test "$WATCH_ID" = "com.jionzyk.emotionmusic.watchkitapp"
+          test "$WATCH_ID" = "com.jionzyk.emotionmusic.6C26JP6Z6T.watchkitapp"
           test "$COMPANION_ID" = "com.jionzyk.emotionmusic.6C26JP6Z6T"
 
           echo "SUCCESS: Watch App is embedded and identifiers match."
@@ -89,6 +96,7 @@ jobs:
 
           echo "===== WATCH EXECUTABLE ====="
           EXECUTABLE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$WATCH_APP/Info.plist")
+
           echo "Executable: $EXECUTABLE"
 
           file "$WATCH_APP/$EXECUTABLE"
