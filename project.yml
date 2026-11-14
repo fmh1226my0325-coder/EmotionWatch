@@ -2,7 +2,7 @@
 name: EmotionMusic
 
 options:
-  bundleIdPrefix: com.emotionmusic
+bundleIdPrefix: com.jionzyk
 
 deploymentTarget:
   iOS: "17.0"
