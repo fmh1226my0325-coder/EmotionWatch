@@ -176,7 +176,11 @@ struct MusicHomeView: View {
                 DocumentPicker(
                     onPick: { urls in
                         showingImporter = false
-                        library.importFiles(urls)
+
+                        Task {
+                            await library.importFiles(urls)
+                        }
+
                         importError = nil
                     },
                     onCancel: {
