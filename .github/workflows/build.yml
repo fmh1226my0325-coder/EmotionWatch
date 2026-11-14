@@ -44,13 +44,11 @@ jobs:
             exit 1
           fi
 
-          echo "iPhone App exists."
-
           IPHONE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Info.plist")
 
           echo "iPhone Bundle ID: $IPHONE_ID"
 
-          test "$IPHONE_ID" = "com.jionzyk.emotionmusic.6C26JP6Z6T"
+          test "$IPHONE_ID" = "com.jionzyk.emotionmusic"
 
           if /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$APP_PATH/Info.plist"; then
             echo "Background audio configuration found."
