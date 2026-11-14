@@ -7,7 +7,10 @@ options:
 deploymentTarget:
   iOS: "17.0"
   watchOS: "10.0"
-
+    info:
+      properties:
+        UIBackgroundModes:
+          - audio
 settings:
   base:
     SWIFT_VERSION: "5.0"
