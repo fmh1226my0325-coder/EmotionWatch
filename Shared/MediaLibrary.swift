@@ -1,6 +1,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 final class MediaLibrary: ObservableObject {
@@ -9,7 +10,7 @@ final class MediaLibrary: ObservableObject {
     @Published var importMessage: String?
 
     private let supportedAudio: Set<String> = [
-        "mp3", "m4a", "aac", "wav", "aiff", "caf"
+        "mp3", "m4a", "aac", "wav", "aiff", "caf", "flac"
     ]
 
     private let supportedVideo: Set<String> = [
@@ -55,10 +56,20 @@ final class MediaLibrary: ObservableObject {
                     return nil
                 }
 
+                let artworkFileName: String?
+                if kind == .audio {
+                    artworkFileName = ArtworkManager.shared.artworkFileName(
+                        for: url.lastPathComponent
+                    )
+                } else {
+                    artworkFileName = nil
+                }
+
                 return MediaItem(
                     title: url.deletingPathExtension().lastPathComponent,
                     kind: kind,
-                    fileName: url.lastPathComponent
+                    fileName: url.lastPathComponent,
+                    artworkFileName: artworkFileName
                 )
             }.sorted {
                 $0.title.localizedCaseInsensitiveCompare($1.title)
@@ -71,20 +82,12 @@ final class MediaLibrary: ObservableObject {
         }
     }
 
-    func importFiles(_ urls: [URL]) {
+    func importFiles(_ urls: [URL]) async {
+        let fileManager = FileManager.default
         var successCount = 0
-        var failures: [String] = []
+        var errors: [String] = []
 
         for source in urls {
-            let ext = source.pathExtension.lowercased()
-
-            guard supportedAudio.contains(ext)
-                    || supportedVideo.contains(ext)
-                    || ext == "lrc" else {
-                failures.append("\(source.lastPathComponent)：不支持的格式")
-                continue
-            }
-
             let accessed = source.startAccessingSecurityScopedResource()
 
             defer {
@@ -93,30 +96,35 @@ final class MediaLibrary: ObservableObject {
                 }
             }
 
+            let ext = source.pathExtension.lowercased()
+
+            guard supportedAudio.contains(ext)
+                    || supportedVideo.contains(ext)
+                    || ext == "lrc" else {
+                errors.append("不支持的文件：\(source.lastPathComponent)")
+                continue
+            }
+
             let destination = uniqueDestination(
                 for: source.lastPathComponent
             )
 
             do {
-                let fileManager = FileManager.default
-
-                if accessed {
-                    try fileManager.copyItem(
-                        at: source,
-                        to: destination
-                    )
-                } else {
-                    // 某些系统提供的 URL 不需要安全作用域访问。
-                    // 仍然尝试复制，让系统返回具体错误。
-                    try fileManager.copyItem(
-                        at: source,
-                        to: destination
-                    )
-                }
+                try fileManager.copyItem(
+                    at: source,
+                    to: destination
+                )
 
                 successCount += 1
+
+                if supportedAudio.contains(ext) {
+                    _ = await ArtworkManager.shared.extractAndSaveArtwork(
+                        from: destination,
+                        audioFileName: destination.lastPathComponent
+                    )
+                }
             } catch {
-                failures.append(
+                errors.append(
                     "\(source.lastPathComponent)：\(error.localizedDescription)"
                 )
             }
@@ -124,18 +132,27 @@ final class MediaLibrary: ObservableObject {
 
         refresh()
 
-        if failures.isEmpty {
+        if errors.isEmpty {
             importMessage = "成功导入 \(successCount) 个文件"
             errorMessage = nil
         } else {
-            importMessage = "成功导入 \(successCount) 个文件；失败 \(failures.count) 个"
-            errorMessage = failures.joined(separator: "\n")
+            importMessage = "成功导入 \(successCount) 个文件"
+            errorMessage = errors.joined(separator: "\n")
         }
     }
 
     func delete(_ item: MediaItem) {
         do {
-            try FileManager.default.removeItem(at: fileURL(for: item))
+            try FileManager.default.removeItem(
+                at: fileURL(for: item)
+            )
+
+            if item.kind == .audio {
+                ArtworkManager.shared.removeArtwork(
+                    for: item.fileName
+                )
+            }
+
             refresh()
         } catch {
             errorMessage = "删除失败：\(error.localizedDescription)"
@@ -154,19 +171,17 @@ final class MediaLibrary: ObservableObject {
     private func uniqueDestination(for name: String) -> URL {
         let base = documentsURL.appendingPathComponent(name)
 
-        guard FileManager.default.fileExists(atPath: base.path) else {
+        if !FileManager.default.fileExists(atPath: base.path) {
             return base
         }
 
         let stem = base.deletingPathExtension().lastPathComponent
         let ext = base.pathExtension
-
         var index = 2
 
         while true {
-            let suffix = ext.isEmpty ? "" : ".\(ext)"
             let candidate = documentsURL.appendingPathComponent(
-                "\(stem)-\(index)\(suffix)"
+                "\(stem)-\(index).\(ext)"
             )
 
             if !FileManager.default.fileExists(atPath: candidate.path) {
