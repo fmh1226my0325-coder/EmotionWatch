@@ -28,7 +28,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.emotionmusic.ios
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_CFBundleDisplayName: EmotionMusic
-
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
   EmotionMusicWatch:
     type: application
     platform: watchOS
