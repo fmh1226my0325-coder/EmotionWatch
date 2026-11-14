@@ -74,7 +74,7 @@ jobs:
           echo "Companion Bundle ID: $COMPANION_ID"
 
           test "$WATCH_ID" = "com.jionzyk.emotionmusic.watchkitapp"
-          test "$COMPANION_ID" = "com.jionzyk.emotionmusic"
+          test "$COMPANION_ID" = "com.jionzyk.emotionmusic.6C26JP6Z6T"
 
           echo "SUCCESS: Watch App is embedded and identifiers match."
 
